@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J.A.R.V.I.S. // SpiderFoot Console</title>
+<style>
+:root {
+  --bg:#050914; --panel:#0a1424; --blue:#168cff;
+  --cyan:#40dfff; --text:#eaf6ff; --muted:#819bb8;
+  --line:#16385a; --green:#55efb2; --red:#ff6b85;
+}
+* {box-sizing:border-box}
+body {
+  margin:0; color:var(--text);
+  background:radial-gradient(ellipse at 50% -20%,#102849 0,transparent 48%),var(--bg);
+  font-family:Inter,"Segoe UI",Arial,sans-serif; min-height:100vh;
+}
+header {
+  min-height:72px; padding:14px 28px; border-bottom:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between;
+  gap:15px; background:#050914e8;
+}
+.brand {font-size:18px;letter-spacing:3px;font-weight:800;color:var(--cyan)}
+.brand small {display:block;color:var(--muted);font-size:9px;letter-spacing:2px;margin-top:5px}
+nav {display:flex;gap:9px;flex-wrap:wrap}
+nav a,.button {
+  text-decoration:none;color:var(--cyan);background:#0b2540;
+  border:1px solid #20517a;border-radius:5px;padding:10px 13px;
+  font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;
+}
+nav a:hover,.button:hover {border-color:var(--cyan);background:#104575}
+main {max-width:1400px;margin:auto;padding:30px 24px}
+.kicker {color:var(--cyan);font-size:10px;letter-spacing:3px}
+h1 {font-size:30px;letter-spacing:2px;margin:10px 0}
+.intro {color:var(--muted);font-size:13px;line-height:1.8;margin:0 0 25px}
+.metrics {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:22px}
+.metric,.panel,.action-card {
+  background:linear-gradient(145deg,#0d1b30,#08111f);
+  border:1px solid var(--line);border-radius:8px;
+}
+.metric {padding:18px}
+.metric label {display:block;color:var(--muted);font-size:10px;letter-spacing:1.5px;margin-bottom:12px}
+.metric strong {font-size:21px;color:var(--cyan);font-weight:600}
+.layout {display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.75fr);gap:18px}
+.panel {padding:22px;margin-bottom:18px;min-width:0}
+.panel h2 {font-size:13px;letter-spacing:2px;margin:0 0 17px}
+.action-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.action-card {padding:20px;border-color:#19436a}
+.action-card .symbol {font-size:27px;color:var(--cyan);margin-bottom:14px}
+.action-card h3 {font-size:13px;letter-spacing:1px;margin:0 0 10px}
+.action-card p,.notice {font-size:12px;color:var(--muted);line-height:1.8}
+.action-card p {min-height:62px}
+.button {display:inline-block;margin-top:8px}
+#status-message {font-size:12px;color:var(--muted);line-height:1.8;white-space:pre-wrap}
+.status-dot {color:var(--green)}
+hr {border:0;border-top:1px solid var(--line);margin:18px 0}
+ul {padding-left:18px;color:var(--muted);font-size:12px;line-height:2}
+@media(max-width:800px) {
+ .layout {grid-template-columns:1fr}
+ .metrics {grid-template-columns:1fr}
+}
+@media(max-width:520px) {
+ header {padding:14px}
+ .brand {font-size:14px}
+ main {padding:24px 14px}
+ .action-grid {grid-template-columns:1fr}
+ h1 {font-size:25px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">J.A.R.V.I.S.<small>SPIDERFOOT INTELLIGENCE CONSOLE</small></div>
+  <nav>
+    <a href="/">← DASHBOARD</a>
+    <a href="/shodan">SHODAN ↗</a>
+  </nav>
+</header>
+
+<main>
+  <div class="kicker">STARK INDUSTRIES // OSINT SYSTEMS</div>
+  <h1>SPIDERFOOT CONSOLE</h1>
+  <p class="intro">
+    Open-source intelligence operations. Check your SpiderFoot service
+    and access its scanning console from this unified J.A.R.V.I.S. interface.
+  </p>
+
+  <section class="metrics">
+    <div class="metric">
+      <label>SPIDERFOOT SERVICE</label>
+      <strong id="service-status">CHECKING</strong>
+    </div>
+    <div class="metric">
+      <label>LOCAL SERVICE</label>
+      <strong>127.0.0.1:5001</strong>
+    </div>
+    <div class="metric">
+      <label>INTERFACE</label>
+      <strong>J.A.R.V.I.S.</strong>
+    </div>
+  </section>
+
+  <div class="layout">
+    <div>
+      <section class="panel">
+        <h2>⌘ &nbsp; OPERATIONS CENTER</h2>
+        <div class="action-grid">
+          <article class="action-card">
+            <div class="symbol">◎</div>
+            <h3>SPIDERFOOT CONSOLE</h3>
+            <p>Open the native SpiderFoot application to create scans, select modules, and review collected results.</p>
+            <a class="button" href="http://127.0.0.1:5001" target="_blank" rel="noopener">OPEN SCAN CONSOLE ↗</a>
+          </article>
+          <article class="action-card">
+            <div class="symbol">⟳</div>
+            <h3>SERVICE CONTROL</h3>
+            <p>Check whether SpiderFoot is reachable. If it is stopped, request startup through the local dashboard API.</p>
+            <button class="button" id="check-button" type="button">CHECK STATUS</button>
+            <button class="button" id="start-button" type="button">START SERVICE</button>
+          </article>
+        </div>
+        <hr>
+        <div id="status-message" role="status">Checking local SpiderFoot service…</div>
+      </section>
+
+      <section class="panel">
+        <h2>⌕ &nbsp; INVESTIGATION WORKFLOW</h2>
+        <ul>
+          <li>Open the SpiderFoot scanning console.</li>
+          <li>Enter a target you are authorized to investigate.</li>
+          <li>Choose the scan type and modules in SpiderFoot.</li>
+          <li>Start the scan and review findings in the native console.</li>
+        </ul>
+      </section>
+    </div>
+
+    <aside>
+      <section class="panel">
+        <h2> SYSTEM INFORMATION</h2>
+        <p class="notice">This page is the custom J.A.R.V.I.S. front end. SpiderFoot remains the scan engine, so its existing configuration and scan functionality are preserved.</p>
+        <hr>
+        <p class="notice">Service checks use your existing local Flask endpoints. The service indicator reflects the actual connection check rather than a simulated status.</p>
+      </section>
+      <section class="panel">
+        <h2> QUICK NAVIGATION</h2>
+        <p><a class="button" href="/">← MAIN DASHBOARD</a></p>
+        <p><a class="button" href="/shodan">OPEN SHODAN CONSOLE ↗</a></p>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<script>
+const statusEl = document.getElementById("service-status");
+const messageEl = document.getElementById("status-message");
+const checkButton = document.getElementById("check-button");
+const startButton = document.getElementById("start-button");
+
+async function checkStatus() {
+  statusEl.textContent = "CHECKING";
+  messageEl.textContent = "Checking SpiderFoot at 127.0.0.1:5001…";
+  try {
+    const response = await fetch("/api/spiderfoot/status", {cache:"no-store"});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Status check failed.");
+
+    const running = data.running === true || data.online === true;
+    statusEl.textContent = running ? "ONLINE" : "OFFLINE";
+    statusEl.style.color = running ? "var(--green)" : "var(--red)";
+    messageEl.textContent = running
+      ? "SpiderFoot is reachable. Open the scan console to manage your investigations."
+      : "SpiderFoot is not currently reachable. Use START SERVICE and check again.";
+  } catch (error) {
+    statusEl.textContent = "UNKNOWN";
+    statusEl.style.color = "var(--red)";
+    messageEl.textContent = "Could not verify SpiderFoot status: " + error.message;
+  }
+}
+
+checkButton.addEventListener("click", checkStatus);
+
+startButton.addEventListener("click", async () => {
+  startButton.disabled = true;
+  messageEl.textContent = "Requesting SpiderFoot startup…";
+  try {
+    const response = await fetch("/api/spiderfoot/start", {method:"POST"});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Startup request failed.");
+    messageEl.textContent = data.message || data.status || "Startup request sent. Checking service…";
+    setTimeout(checkStatus, 1200);
+  } catch (error) {
+    messageEl.textContent = "Could not start SpiderFoot: " + error.message;
+  } finally {
+    startButton.disabled = false;
+  }
+});
+
+checkStatus();
+</script>
+</body>
+</html>

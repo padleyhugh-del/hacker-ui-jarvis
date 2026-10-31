@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS // Domain Manager</title>
+<style>
+:root{color-scheme:dark;--bg:#050b16;--panel:#0a1728;--blue:#00afff;--cyan:#8be9ff;--text:#eaf6ff;--muted:#82a7c7;--line:#17466b}
+*{box-sizing:border-box}body{margin:0;padding:24px;background:var(--bg);color:var(--text);font:16px system-ui,sans-serif}
+main{max-width:900px;margin:auto}h1{color:var(--cyan);letter-spacing:2px}p,.muted{color:var(--muted)}
+.panel{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:20px;margin:18px 0}
+input,button{font:inherit;border-radius:7px;padding:11px;border:1px solid var(--line)}
+input{background:#050b16;color:var(--text);width:100%;margin:6px 0 12px}
+button{background:#07345a;color:var(--cyan);cursor:pointer;margin:4px}button:hover{border-color:var(--blue)}
+.domain{border-top:1px solid var(--line);padding:14px 0;overflow-wrap:anywhere}
+.status{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--cyan)}
+a{color:var(--cyan)}.actions{display:flex;gap:6px;flex-wrap:wrap}
+</style>
+</head>
+<body><main>
+<p>STARK INDUSTRIES // AUTHORIZED LAB INVENTORY</p>
+<h1>DOMAIN MANAGER</h1>
+<p>Track domains you own or have explicit permission to assess. DNS check performs name resolution only.</p>
+<div class="panel">
+<h2>Add a domain</h2>
+<form id="addForm">
+<label for="domain">Domain name</label>
+<input id="domain" placeholder="example.com" required>
+<label for="note">Note (optional)</label>
+<input id="note" placeholder="Lab / authorization reference">
+<button type="submit">ADD TO INVENTORY</button>
+</form>
+<div id="status" class="status" role="status"></div>
+</div>
+<div class="panel">
+<h2>Saved domains</h2>
+<div id="domains">Loading inventory…</div>
+</div>
+<p><a href="/">← Return to JARVIS dashboard</a></p>
+</main>
+<script>
+const statusBox=document.getElementById('status');
+async function api(url,options={}) {
+  const r=await fetch(url,{headers:{'Content-Type':'application/json'},...options});
+  const data=await r.json();
+  if(!r.ok||data.ok===false) throw new Error(data.error||`HTTP ${r.status}`);
+  return data;
+}
+function showStatus(text){statusBox.textContent=text;}
+async function loadDomains(){
+  const host=document.getElementById('domains');
+  try {
+    const data=await api('/api/lab-domains');
+    host.replaceChildren();
+    if(!data.domains.length){host.textContent='No domains saved yet.';return;}
+    for(const item of data.domains){
+      const row=document.createElement('div');row.className='domain';
+      const title=document.createElement('strong');title.textContent=item.domain;row.append(title);
+      if(item.note){const note=document.createElement('p');note.textContent=item.note;row.append(note);}
+      const actions=document.createElement('div');actions.className='actions';
+      const check=document.createElement('button');check.textContent='CHECK DNS';
+      check.onclick=async()=>{try{const d=await api('/api/lab-domains/check',{method:'POST',body:JSON.stringify({domain:item.domain})});showStatus(d.addresses.length?`${d.domain}\n${d.addresses.join('\n')}`:`${d.domain}\n${d.error||'No addresses returned.'}`);}catch(e){showStatus(e.message);}};
+      const remove=document.createElement('button');remove.textContent='REMOVE';
+      remove.onclick=async()=>{if(!confirm(`Remove ${item.domain} from the inventory?`))return;try{await api('/api/lab-domains',{method:'DELETE',body:JSON.stringify({domain:item.domain})});showStatus('Domain removed.');await loadDomains();}catch(e){showStatus(e.message);}};
+      actions.append(check,remove);row.append(actions);host.append(row);
+    }
+  }catch(e){host.textContent='Could not load inventory: '+e.message;}
+}
+document.getElementById('addForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  try{
+    await api('/api/lab-domains',{method:'POST',body:JSON.stringify({domain:document.getElementById('domain').value,note:document.getElementById('note').value})});
+    document.getElementById('domain').value='';document.getElementById('note').value='';
+    showStatus('Domain saved.');await loadDomains();
+  }catch(err){showStatus(err.message);}
+});
+loadDomains();
+</script></body></html>

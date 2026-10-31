@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J.A.R.V.I.S. // Intelligence Dashboard</title>
+<style>
+:root{--bg:#050914;--panel:#0a1424;--panel2:#0d1b30;--blue:#168cff;--cyan:#40dfff;--text:#eaf6ff;--muted:#819bb8;--line:#16385a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -20%,#10325a 0,transparent 55%),var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif;min-height:100vh}
+header{height:78px;padding:0 5%;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:#050914cc}
+.brand{font-size:20px;font-weight:800;letter-spacing:4px;color:var(--cyan);text-shadow:0 0 18px #168cff66}
+.brand small{display:block;font-size:10px;letter-spacing:3px;color:var(--muted);margin-top:5px;font-weight:500}
+.status{font-size:11px;color:#69f5cb;letter-spacing:2px}
+main{max-width:1100px;margin:0 auto;padding:75px 24px}
+.eyebrow{font-size:11px;letter-spacing:4px;color:var(--cyan);text-align:center}
+h1{text-align:center;font-size:clamp(30px,5vw,48px);letter-spacing:2px;margin:17px 0 12px}
+.subtitle{text-align:center;color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:58px}
+.tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:25px}
+.tool{position:relative;display:block;text-decoration:none;color:var(--text);background:linear-gradient(145deg,#0e2037,#08111f 75%);border:1px solid #17436b;border-radius:12px;padding:30px;min-height:260px;overflow:hidden;transition:.22s}
+.tool:before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),var(--blue),transparent)}
+.tool:hover{transform:translateY(-5px);border-color:var(--cyan);box-shadow:0 0 30px #168cff25, inset 0 0 25px #168cff09}
+.icon{width:54px;height:54px;border:1px solid #23649b;background:#0b2540;border-radius:10px;display:grid;place-items:center;color:var(--cyan);font-size:25px;margin-bottom:25px}
+.tool h2{font-size:22px;letter-spacing:2px;margin:0 0 12px}
+.tool p{color:var(--muted);font-size:13px;line-height:1.8;max-width:390px;margin:0 0 24px}
+.launch{color:var(--cyan);font-size:11px;letter-spacing:2px;font-weight:700}
+.arrow{float:right;font-size:18px}
+footer{text-align:center;color:#496681;font-size:10px;letter-spacing:2px;margin-top:70px}
+@media(max-width:650px){main{padding:45px 18px}.tools{grid-template-columns:1fr}.tool{min-height:225px}header{padding:0 18px}.brand{font-size:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">J.A.R.V.I.S.<small>INTELLIGENCE SYSTEMS</small></div>
+  <div class="status">● SYSTEM ONLINE</div>
+</header>
+<main>
+  <div class="eyebrow">STARK INDUSTRIES // OPERATIONS</div>
+  <h1>INTELLIGENCE DASHBOARD</h1>
+  <div class="subtitle">Select a system to begin your investigation.<br>Authorized tools are available below.</div>
+
+  <section class="tools" id="tool-grid"></section>
+
+  <footer>J.A.R.V.I.S. // MODULAR TOOL INTERFACE</footer>
+</main>
+<script>
+/* Add future tools here. Each entry creates one dashboard card. */
+const tools = [
+  {
+    name: "SHODAN",
+    icon: "🌐",
+    description: "Search internet-connected devices, inspect exposed services, and review host details using the Shodan API.",
+    href: "/shodan",
+    action: "OPEN SHODAN CONSOLE"
+  },
+  {
+    name: "SPIDERFOOT",
+    icon: "🕷️",
+    description: "Open your existing SpiderFoot interface for OSINT scans, reconnaissance, and investigation workflows.",
+    href: "/spiderfoot",
+    action: "OPEN SPIDERFOOT"
+  },
+  {
+    name: "SHERLOCK",
+    icon: "🕵️",
+    description: "Search public websites for profiles matching a username.",
+    href: "/sherlock",
+    action: "OPEN USERNAME INTELLIGENCE"
+  }
+  ,
+  {
+    name: "PHONEINFOGA",
+    icon: "📱",
+    description: "Phone-number OSINT using PhoneInfoga's built-in web interface.",
+    href: "/phoneinfoga",
+    action: "OPEN PHONE INTELLIGENCE"
+  }
+  ,
+  {
+    name: "RECON-NG",
+    description: "JARVIS Recon-ng command center with workspace controls, module search, and real command output.",
+    href: "/reconng",
+    action: "OPEN RECON-NG CONTROL CENTER"
+  , icon: "🔎" }
+
+  ,
+  {
+    name: "DOMAIN MANAGER",
+    icon: "🌐",
+    description: "Manage authorized lab domains and check DNS resolution.",
+    href: "/domains",
+    action: "OPEN DOMAIN MANAGER"
+  },
+  {
+    name: "EVILGINX",
+    icon: "🛡️",
+    description: "View the local Evilginx build status and verification fingerprint. This card does not launch the tool.",
+    href: "/evilginx",
+    action: "VIEW BUILD STATUS"
+  },
+  {
+    name: "BBOT",
+    icon: "🎯",
+    description: "Attack surface discovery and OSINT scanning with BBOT.",
+    href: "/bbot",
+    action: "OPEN BBOT CONTROL CENTER"
+  }
+  ,
+  {
+    name: "SQLMAP",
+    icon: "🗄️",
+    description: "SQLmap installation status and authorized target URL preparation.",
+    href: "/sqlmap",
+    action: "OPEN SQLMAP CONTROL CENTER"
+  },
+  {
+    name: "NUCLEI",
+    icon: "🔬",
+    description: "Conservative template-based vulnerability scanning for authorized targets.",
+    href: "/nuclei",
+    action: "OPEN NUCLEI CONTROL CENTER"
+  },
+  {
+    name: "CAIDO",
+    icon: "🛡️",
+    description: "Local Caido web security testing workspace with live service status.",
+    href: "http://127.0.0.1:8080",
+    action: "OPEN CAIDO WORKSPACE"
+  },
+  {
+    name: "BLOODHOUND",
+    icon: "🩸",
+    description: "Open your local BloodHound Community Edition interface.",
+    href: "http://127.0.0.1:8081/ui/login",
+    action: "OPEN BLOODHOUND"
+  }
+];
+
+// Start/check the local Caido service when the JARVIS dashboard loads.
+fetch("/api/caido/status")
+  .then(response => response.json())
+  .then(status => console.log("CAIDO:", status.online ? "ONLINE" : "STARTING"))
+  .catch(error => console.warn("CAIDO status check failed:", error));
+
+const grid = document.getElementById("tool-grid");
+for (const tool of tools) {
+  const card = document.createElement("a");
+  card.className = "tool";
+  card.href = tool.href;
+  if (tool.name === "SPIDERFOOT") card.target = "_blank";
+  const icon = document.createElement("div");
+  icon.className = "icon";
+  icon.textContent = tool.icon;
+  const title = document.createElement("h2");
+  title.textContent = tool.name;
+  const desc = document.createElement("p");
+  desc.textContent = tool.description;
+  const action = document.createElement("div");
+  action.className = "launch";
+  action.textContent = tool.action;
+  const arrow = document.createElement("span");
+  arrow.className = "arrow";
+  arrow.textContent = "↗";
+  action.appendChild(arrow);
+  card.append(icon, title, desc, action);
+  grid.appendChild(card);
+}
+</script>
+</body>
+</html>

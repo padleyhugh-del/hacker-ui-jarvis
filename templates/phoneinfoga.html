@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J.A.R.V.I.S. // PHONEINFOGA</title>
+<style>
+:root{color-scheme:dark;--bg:#050b16;--text:#eaf6ff;--muted:#8aa9c5;--cyan:#40dfff}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#102844,var(--bg) 65%);color:var(--text);font:15px system-ui,sans-serif;min-height:100vh}
+main{max-width:900px;margin:auto;padding:42px 20px}
+a{color:var(--cyan);text-decoration:none}
+.eyebrow{text-align:center;letter-spacing:3px;color:var(--cyan);font-size:11px}
+h1{text-align:center;letter-spacing:3px;font-size:clamp(28px,5vw,42px)}
+.intro{text-align:center;color:var(--muted);line-height:1.7}
+.panel{margin:28px auto;padding:24px;background:linear-gradient(145deg,#0e2037,#08111f);border:1px solid #17436b;border-radius:14px}
+label{display:block;margin:0 0 10px;color:var(--cyan);letter-spacing:1px;font-size:12px}
+input{width:100%;padding:14px;background:#050b16;border:1px solid #23649b;border-radius:8px;color:var(--text);font-size:16px}
+button{margin-top:14px;padding:13px 20px;background:#0b2540;border:1px solid var(--cyan);border-radius:8px;color:var(--cyan);font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+#status{color:var(--cyan);white-space:pre-wrap}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#050b16;border:1px solid #17436b;border-radius:8px;padding:16px;min-height:110px;max-height:520px;overflow:auto;color:var(--text)}
+.note{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">STARK INDUSTRIES // IDENTITY INTELLIGENCE</div>
+<h1>PHONEINFOGA</h1>
+<p class="intro">Phone-number reconnaissance through your local PhoneInfoga installation.</p>
+<section class="panel">
+<form id="scan-form">
+<label for="number">TARGET PHONE NUMBER — INTERNATIONAL FORMAT</label>
+<input id="number" name="number" type="tel" required maxlength="30"
+ autocomplete="tel" placeholder="+1 202 555 0123"
+ pattern="\+[0-9(). \-]{7,29}" title="Include the + country code and full number">
+<button id="submit" type="submit">INITIATE PHONE SCAN</button>
+</form>
+<p id="status" role="status">SYSTEM READY</p>
+<pre id="results">Awaiting scan...</pre>
+<p class="note">Use numbers you own or are authorized to investigate. Scan results can be incomplete or inaccurate.</p>
+</section>
+<p><a href="/">← RETURN TO J.A.R.V.I.S. DASHBOARD</a></p>
+</main>
+<script>
+const form=document.getElementById("scan-form");
+const button=document.getElementById("submit");
+const statusEl=document.getElementById("status");
+const results=document.getElementById("results");
+form.addEventListener("submit",async event=>{
+  event.preventDefault();
+  button.disabled=true;
+  statusEl.textContent="SCAN IN PROGRESS...";
+  results.textContent="Running PhoneInfoga. This may take up to three minutes...";
+  try{
+    const response=await fetch("/api/phoneinfoga/scan",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({number:document.getElementById("number").value.trim()})
+    });
+    const data=await response.json();
+    results.textContent=data.output||data.error||"No output returned.";
+    statusEl.textContent=data.ok?"SCAN COMPLETE":"SCAN FINISHED WITH WARNINGS";
+    if(!response.ok)statusEl.textContent="INPUT OR SYSTEM ERROR";
+    if(data.error)results.textContent=data.error+(data.output?"\n\n"+data.output:"");
+  }catch(error){
+    statusEl.textContent="CONNECTION ERROR";
+    results.textContent=error.message;
+  }finally{
+    button.disabled=false;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JARVIS // NUCLEI</title>
+<style>
+:root{color-scheme:dark;--bg:#050b16;--panel:#09182a;--line:#17496b;--cyan:#40dfff;--text:#eaf6ff;--muted:#8ba9c5}
+*{box-sizing:border-box}body{margin:0;padding:28px;background:radial-gradient(ellipse at top,#102943,var(--bg) 65%);font:15px system-ui,sans-serif;color:var(--text)}
+main{max-width:1000px;margin:auto}.eyebrow{color:var(--cyan);letter-spacing:3px;font-size:12px}
+h1{font-size:32px;margin:8px 0}p{color:var(--muted);line-height:1.6}
+.panel{background:#081525;border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:18px}
+label{display:block;color:var(--cyan);font-size:12px;letter-spacing:1px;margin:14px 0 7px}
+input,select,button{font:inherit;border-radius:7px;padding:11px;background:#06101d;color:var(--text);border:1px solid var(--line);width:100%}
+button{background:#07304a;color:var(--cyan);cursor:pointer;font-weight:700}button:hover{border-color:var(--cyan)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:16px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#02070d;border:1px solid #12344b;padding:16px;min-height:180px;max-height:480px;overflow:auto;color:#a9f3ff;border-radius:8px}
+a{color:var(--cyan)}.warning{font-size:13px}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">STARK INDUSTRIES // SECURITY SYSTEMS</div>
+<h1>🔬 NUCLEI CONTROL CENTER</h1>
+<p>Run a conservative template-based security scan against an authorized domain or URL.</p>
+<p><a href="/">← Return to JARVIS tools</a></p>
+<section class="panel">
+<div class="eyebrow">SCAN CONFIGURATION</div>
+<form id="scan">
+<label for="target">AUTHORIZED TARGET DOMAIN OR URL</label>
+<input id="target" name="target" placeholder="https://your-domain.example" required maxlength="2048">
+<div class="grid">
+<button type="submit" id="start">▶ START SAFE SCAN</button>
+<button type="button" id="status">CHECK NUCLEI STATUS</button>
+<button type="button" id="clear">CLEAR OUTPUT</button>
+</div>
+</form>
+<p class="warning">Only scan systems you own or have explicit permission to test. Scans generate network traffic. This interface uses a limited rate and a 2-minute timeout.</p>
+</section>
+<section class="panel">
+<div class="eyebrow">SYSTEM OUTPUT</div>
+<pre id="output">Nuclei interface ready. Check status before scanning.</pre>
+</section>
+</main>
+<script>
+const out=document.getElementById("output");
+const start=document.getElementById("start");
+async function callApi(url,data){
+  out.textContent="Working...";
+  start.disabled=true;
+  try{
+    const r=await fetch(url,{method:data?"POST":"GET",headers:data?{"Content-Type":"application/json"}:{},body:data?JSON.stringify(data):undefined});
+    const j=await r.json();
+    out.textContent=j.output||j.error||JSON.stringify(j,null,2);
+  }catch(e){out.textContent="Request failed: "+e}
+  finally{start.disabled=false}
+}
+document.getElementById("status").onclick=()=>callApi("/api/nuclei/status");
+document.getElementById("clear").onclick=()=>out.textContent="Output cleared.";
+document.getElementById("scan").onsubmit=e=>{
+  e.preventDefault();
+  callApi("/api/nuclei/scan",{target:document.getElementById("target").value.trim()});
+};
+</script>
+</body>
+</html>

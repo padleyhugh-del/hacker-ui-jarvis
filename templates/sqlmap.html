@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>J.A.R.V.I.S. // SQLmap Control Center</title>
+<style>
+:root{color-scheme:dark;--bg:#050b16;--panel:#09172a;--line:#124b72;--cyan:#40dfff;--blue:#00afff;--text:#eaf6ff;--muted:#8ba9c3;--red:#ff667a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#0b2440 0%,var(--bg) 60%);color:var(--text);font:15px/1.5 system-ui,Segoe UI,sans-serif}
+main{max-width:1100px;margin:auto;padding:26px 18px 50px}.eyebrow{color:var(--cyan);letter-spacing:.19em;font-size:12px;font-weight:800}
+h1{font-size:clamp(25px,4vw,38px);margin:6px 0;color:#eafaff}p{color:var(--muted)}.layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:16px}
+.panel{background:linear-gradient(145deg,#0a1c31,#07111f);border:1px solid var(--line);border-radius:12px;padding:19px;box-shadow:0 8px 30px #0005}
+h2{font-size:16px;color:var(--cyan);letter-spacing:.08em;margin:0 0 14px}
+label{display:block;font-size:13px;color:#b9d7eb;margin:13px 0 6px}
+input[type=url],select{width:100%;background:#030b14;color:var(--text);border:1px solid #245579;border-radius:7px;padding:11px;font:inherit}
+input:focus,select:focus{outline:1px solid var(--cyan);border-color:var(--cyan)}
+.check{display:flex;gap:9px;align-items:flex-start;color:#b9d7eb;margin-top:14px}.check input{margin-top:5px}
+button{border:1px solid var(--blue);border-radius:7px;background:#062d4b;color:#eafaff;padding:11px 14px;font-weight:750;cursor:pointer}
+button:hover{background:#08446c}button:disabled{opacity:.45;cursor:not-allowed}.buttons{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}.danger{border-color:#a83950;background:#34101b}
+#status{font-size:13px;color:var(--cyan);margin-top:12px;white-space:pre-wrap}
+pre{background:#02070d;border:1px solid #153650;border-radius:8px;padding:14px;min-height:220px;max-height:460px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#bcefff;font:12px/1.6 ui-monospace,Consolas,monospace}
+.small{font-size:12px;color:var(--muted)}a{color:var(--cyan)}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">STARK INDUSTRIES // SECURITY SYSTEMS</div>
+<h1>SQLmap Control Center</h1>
+<p>Guided SQL injection detection for systems you own or are explicitly authorized to assess.</p>
+<div class="layout">
+<section class="panel">
+<h2>01 // TARGET & CONFIGURATION</h2>
+<form id="scanform">
+<label for="target">Target URL</label>
+<input id="target" type="url" placeholder="https://your-authorized-lab.example/item?id=1" required>
+<label for="level">Detection level</label>
+<select id="level"><option value="1">Level 1 — basic checks</option><option value="2">Level 2 — additional checks</option><option value="3">Level 3 — broader checks</option></select>
+<label for="timeout">Request timeout</label>
+<select id="timeout"><option value="5">5 seconds</option><option value="10" selected>10 seconds</option><option value="15">15 seconds</option><option value="20">20 seconds</option></select>
+<label class="check"><input id="authorized" type="checkbox" required><span>I own this target or have explicit permission to test it.</span></label>
+<div class="buttons"><button id="start" type="submit">▶ START DETECTION</button><button class="danger" id="stop" type="button">■ STOP SCAN</button></div>
+<div id="status" role="status">Checking SQLmap installation…</div>
+<p class="small">Uses SQLmap's GET-based boolean/error detection techniques, risk 1, one thread, no retries, and no database dumping or OS-shell options.</p>
+</form>
+</section>
+<section class="panel">
+<h2>02 // LIVE CONSOLE</h2>
+<p class="small">Actual SQLmap process output appears here while the scan runs.</p>
+<pre id="console" aria-live="polite">J.A.R.V.I.S. // SQLMAP READY
+Awaiting an authorized scan…</pre>
+<div class="buttons"><button id="refresh" type="button">↻ REFRESH OUTPUT</button><button id="clear" type="button">CLEAR CONSOLE</button></div>
+</section>
+</div>
+<section class="panel" style="margin-top:16px">
+<h2>03 // OPERATION NOTES</h2>
+<p id="summary">Status and scan results will appear in the live console.</p>
+<p class="small">Results are saved under <code>~/jarvis_shodan_ui/sqlmap-results</code>. Only submit targets you're authorized to test. Detection can still generate requests and may affect fragile applications.</p>
+<a href="/">← Return to JARVIS dashboard</a>
+</section>
+</main>
+<script>
+const statusEl=document.getElementById('status'), consoleEl=document.getElementById('console');
+const startBtn=document.getElementById('start'), stopBtn=document.getElementById('stop');
+let poller=null, lastOutput='';
+async function api(url, options={}) {
+  const r=await fetch(url,{...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});
+  const data=await r.json().catch(()=>({error:'Server returned an unreadable response.'}));
+  if(!r.ok) throw new Error(data.error||`Request failed (${r.status})`);
+  return data;
+}
+async function refreshOutput(){
+  try{
+    const d=await api('/api/sqlmap/output');
+    const text=(d.output||[]).join('\n');
+    if(text!==lastOutput){consoleEl.textContent=text||'Awaiting SQLmap output…';consoleEl.scrollTop=consoleEl.scrollHeight;lastOutput=text;}
+    if(d.running){statusEl.textContent='SCAN RUNNING // Output updates automatically';startBtn.disabled=true;}
+    else if(d.returncode!==null && d.returncode!==undefined){
+      statusEl.textContent=`SCAN FINISHED // Exit code ${d.returncode}`;
+      startBtn.disabled=false;if(poller){clearInterval(poller);poller=null;}
+    }
+  }catch(e){statusEl.textContent='Console update error: '+e.message;}
+}
+async function checkStatus(){
+  try{const d=await api('/api/sqlmap/status');statusEl.textContent=`ONLINE // ${d.version} // ${d.executable}`;}
+  catch(e){statusEl.textContent='SQLMAP STATUS ERROR // '+e.message;}
+}
+document.getElementById('scanform').addEventListener('submit',async e=>{
+  e.preventDefault();
+  startBtn.disabled=true;statusEl.textContent='Starting SQLmap…';
+  lastOutput='';consoleEl.textContent='Initializing scan…';
+  try{
+    await api('/api/sqlmap/start',{method:'POST',body:JSON.stringify({
+      target:document.getElementById('target').value.trim(),
+      level:Number(document.getElementById('level').value),
+      timeout:Number(document.getElementById('timeout').value),
+      authorized:document.getElementById('authorized').checked
+    })});
+    statusEl.textContent='SCAN STARTED';if(poller)clearInterval(poller);
+    await refreshOutput();poller=setInterval(refreshOutput,1000);
+  }catch(e){statusEl.textContent='START ERROR // '+e.message;startBtn.disabled=false;await refreshOutput();}
+});
+stopBtn.addEventListener('click',async()=>{
+  try{await api('/api/sqlmap/stop',{method:'POST',body:'{}'});statusEl.textContent='Stop requested…';}
+  catch(e){statusEl.textContent='STOP ERROR // '+e.message;}
+  await refreshOutput();
+});
+document.getElementById('refresh').addEventListener('click',refreshOutput);
+document.getElementById('clear').addEventListener('click',()=>{consoleEl.textContent='Console display cleared. Server-side scan log is unchanged.';lastOutput='';});
+checkStatus();refreshOutput();setInterval(refreshOutput,3000);
+</script></body></html>

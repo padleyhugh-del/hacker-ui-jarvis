@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J.A.R.V.I.S. // Evilginx Control Center</title>
+<style>
+:root{--bg:#050914;--panel:#0a1424;--blue:#168cff;--cyan:#40dfff;--text:#eaf6ff;--muted:#819bb8;--line:#16385a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -20%,#10325a 0,transparent 55%),var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif;min-height:100vh;padding:28px 18px}
+main{max-width:1100px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:20px}
+h1{font-size:clamp(24px,4vw,38px);color:var(--cyan);letter-spacing:2px;margin:10px 0}
+h2{font-size:17px;letter-spacing:1px;color:var(--cyan)}
+p,.muted{color:var(--muted);line-height:1.65}
+a{color:var(--cyan)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:24px}
+.panel{min-width:0;border:1px solid var(--line);background:linear-gradient(145deg,#0e2037,#08111f 75%);border-radius:12px;padding:22px;box-shadow:0 0 25px #168cff0b}
+.wide{grid-column:1/-1}
+.status{border:1px solid #23649b;background:#0b2540;border-radius:8px;padding:13px;color:var(--cyan);overflow-wrap:anywhere}
+button{background:#0b2540;border:1px solid #23649b;color:var(--cyan);padding:10px 13px;border-radius:6px;cursor:pointer;margin:5px 4px 5px 0}
+button:hover{border-color:var(--cyan)}
+code,pre{overflow-wrap:anywhere;white-space:pre-wrap;color:#b7eaff}
+pre{max-height:280px;overflow:auto;background:#050b16;border:1px solid var(--line);padding:12px;border-radius:7px}
+.metric{font-size:13px;color:var(--muted);margin:12px 0}
+.metric strong{display:block;color:var(--text);font-size:15px;margin-top:4px}
+input{background:#050b16;color:var(--text);border:1px solid var(--line);padding:10px;border-radius:6px;max-width:100%}
+.domain{padding:10px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}}
+</style>
+</head>
+<body><main>
+<header>
+<div>
+<div class="muted">STARK INDUSTRIES // SECURITY SYSTEMS</div>
+<h1>EVILGINX CONTROL CENTER</h1>
+<div class="muted">Local build verification and authorized lab diagnostics</div>
+</div>
+<div><a href="/">← JARVIS DASHBOARD</a></div>
+</header>
+
+<div class="grid">
+<section class="panel">
+<h2>SYSTEM OVERVIEW</h2>
+<div class="status" id="buildStatus">Checking build…</div>
+<div class="metric">Source commit<strong id="commit">—</strong></div>
+<div class="metric">Binary SHA-256<strong id="sha">—</strong></div>
+<div class="metric">Process state<strong id="process">Not checked</strong></div>
+<button id="refresh">REFRESH STATUS</button>
+</section>
+
+<section class="panel">
+<h2>DIAGNOSTICS</h2>
+<p>Read-only checks of the local executable and project metadata. No tool launch or network listeners.</p>
+<div class="metric">Executable<strong id="binary">Checking…</strong></div>
+<div class="metric">Project directory<strong id="project">~/security-tools/evilginx3-audit</strong></div>
+<div class="status" id="diag">Waiting for diagnostics…</div>
+</section>
+
+<section class="panel">
+<h2>AUTHORIZED DOMAIN INVENTORY</h2>
+<p>Domains saved in your JARVIS Domain Manager. DNS check only resolves the selected name.</p>
+<div id="domains" class="muted">Loading inventory…</div>
+<div class="status" id="dnsResult">Choose CHECK DNS beside a saved domain.</div>
+<p><a href="/domains">OPEN DOMAIN MANAGER →</a></p>
+</section>
+
+<section class="panel">
+<h2>CONFIGURATION INSPECTOR</h2>
+<p>Displays configuration file names and paths only; it does not reveal configuration contents or secrets.</p>
+<button id="configBtn">INSPECT PROJECT FILES</button>
+<pre id="config">Not inspected yet.</pre>
+</section>
+
+<section class="panel wide">
+<h2>RECENT JARVIS LOGS</h2>
+<p>Last lines of the local dashboard log, with sensitive values redacted.</p>
+<button id="logsBtn">LOAD RECENT LOGS</button>
+<pre id="logs">Press the button to load diagnostics.</pre>
+</section>
+</div>
+<p class="muted">Safety status: build inspection only. This control center does not launch Evilginx, configure phishing infrastructure, or collect credentials or sessions.</p>
+</main>
+<script>
+async function getJSON(url){
+  const r=await fetch(url,{cache:"no-store"});
+  const d=await r.json();
+  if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);
+  return d;
+}
+async function refresh(){
+  const status=document.getElementById("buildStatus");
+  status.textContent="Checking local build…";
+  try{
+    const d=await getJSON("/api/evilginx/status");
+    status.textContent=d.status||d.error||"Status unavailable";
+    document.getElementById("commit").textContent=d.commit||"Unavailable";
+    document.getElementById("sha").textContent=d.sha256||"Unavailable";
+    document.getElementById("binary").textContent=d.binary_exists?"Found":"Check endpoint";
+    document.getElementById("process").textContent=d.running?"Running":"Not running";
+    document.getElementById("diag").textContent=d.ok?"Build fingerprint verified.":"Build verification needs attention.";
+  }catch(e){
+    status.textContent="Status endpoint error: "+e.message;
+    document.getElementById("diag").textContent="Could not retrieve build diagnostics.";
+  }
+}
+async function loadDomains(){
+  const host=document.getElementById("domains");
+  try{
+    const d=await getJSON("/api/lab-domains");
+    host.replaceChildren();
+    if(!d.domains.length){host.textContent="No saved domains yet. Add an authorized lab domain in Domain Manager.";return;}
+    for(const item of d.domains){
+      const row=document.createElement("div");row.className="domain";
+      const name=document.createElement("strong");name.textContent=item.domain;row.append(name);
+      const btn=document.createElement("button");btn.textContent="CHECK DNS";
+      btn.onclick=async()=>{
+        const out=document.getElementById("dnsResult");out.textContent="Resolving…";
+        try{
+          const r=await fetch("/api/lab-domains/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({domain:item.domain})});
+          const result=await r.json();
+          out.textContent=result.addresses?.length?`${item.domain}\n${result.addresses.join("\n")}`:(result.error||"No DNS addresses returned.");
+        }catch(e){out.textContent=e.message;}
+      };
+      row.append(btn);host.append(row);
+    }
+  }catch(e){host.textContent="Inventory unavailable: "+e.message;}
+}
+document.getElementById("refresh").onclick=refresh;
+document.getElementById("configBtn").onclick=async()=>{
+  const out=document.getElementById("config");out.textContent="Inspecting project file names…";
+  try{const d=await getJSON("/api/evilginx/inspect");out.textContent=d.files?.join("\n")||"No project files found.";}
+  catch(e){out.textContent="Inspector endpoint unavailable: "+e.message;}
+};
+document.getElementById("logsBtn").onclick=async()=>{
+  const out=document.getElementById("logs");out.textContent="Loading recent logs…";
+  try{const d=await getJSON("/api/evilginx/logs");out.textContent=d.lines||"No log output available.";}
+  catch(e){out.textContent="Log endpoint unavailable: "+e.message;}
+};
+refresh();loadDomains();
+</script>
+</body></html>

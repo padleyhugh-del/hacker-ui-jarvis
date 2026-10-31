@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J.A.R.V.I.S. // SHERLOCK</title>
+<style>
+:root{color-scheme:dark;--bg:#050b16;--text:#eaf6ff;--muted:#8aa9c5;--cyan:#40dfff}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#102844,var(--bg) 65%);color:var(--text);font:15px system-ui,sans-serif;min-height:100vh}
+main{max-width:900px;margin:auto;padding:50px 22px}
+a{color:var(--cyan);text-decoration:none}
+.eyebrow{text-align:center;letter-spacing:3px;color:var(--cyan);font-size:11px}
+h1{text-align:center;letter-spacing:3px;font-size:clamp(28px,5vw,42px)}
+.intro{text-align:center;color:var(--muted);line-height:1.7}
+.panel{margin:30px auto;padding:25px;background:linear-gradient(145deg,#0e2037,#08111f);border:1px solid #17436b;border-radius:14px}
+label{display:block;margin-bottom:10px;color:var(--cyan)}
+input{width:100%;padding:14px;background:#050b16;border:1px solid #23649b;border-radius:8px;color:var(--text);font-size:16px}
+button{margin-top:14px;padding:13px 20px;background:#0b2540;border:1px solid var(--cyan);border-radius:8px;color:var(--cyan);font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5}
+#status{color:var(--muted);white-space:pre-wrap}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#050b16;border:1px solid #17436b;border-radius:8px;padding:16px;min-height:80px}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">STARK INDUSTRIES // IDENTITY INTELLIGENCE</div>
+<h1>SHERLOCK</h1>
+<p class="intro">Search public websites for usernames. Results can be inaccurate and do not prove identity.</p>
+<section class="panel">
+<form id="form">
+<label for="username">TARGET USERNAME</label>
+<input id="username" maxlength="40" pattern="[A-Za-z0-9._-]+" required autocomplete="off" placeholder="Enter a username">
+<button id="submit" type="submit">INITIATE SEARCH</button>
+</form>
+<p id="status" role="status">SYSTEM READY</p>
+<pre id="results">Awaiting search...</pre>
+</section>
+<p><a href="/">← RETURN TO J.A.R.V.I.S. DASHBOARD</a></p>
+</main>
+<script>
+const form=document.getElementById("form"),button=document.getElementById("submit");
+form.addEventListener("submit",async e=>{
+ e.preventDefault();button.disabled=true;
+ document.getElementById("status").textContent="SEARCH IN PROGRESS...";
+ document.getElementById("results").textContent="Checking public websites...";
+ try{
+  const r=await fetch("/api/sherlock/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:document.getElementById("username").value.trim()})});
+  const d=await r.json();if(!r.ok)throw Error(d.error||"Search failed");
+  document.getElementById("status").textContent=d.ok?"SEARCH COMPLETE":"SEARCH FINISHED WITH WARNINGS";
+  document.getElementById("results").textContent=d.output||d.error||"No output returned.";
+ }catch(err){document.getElementById("status").textContent="SYSTEM ERROR";document.getElementById("results").textContent=err.message}
+ finally{button.disabled=false}
+});
+</script>
+</body></html>

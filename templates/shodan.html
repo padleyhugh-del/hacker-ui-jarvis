@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>J.A.R.V.I.S. // Shodan Console</title>
+<style>
+:root{--bg:#050914;--panel:#0a1424;--panel2:#0d1b30;--blue:#168cff;--cyan:#40dfff;--text:#eaf6ff;--muted:#819bb8;--line:#16385a;--green:#55efb2;--red:#ff6b85}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -20%,#102849 0,transparent 48%),var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif}
+header{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#050914e8}
+.brand{font-size:18px;letter-spacing:3px;font-weight:800;color:var(--cyan)}
+.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:2px;margin-top:5px}
+nav{display:flex;gap:10px;align-items:center}
+nav a{font-size:11px;color:var(--muted);text-decoration:none;letter-spacing:1px;border:1px solid var(--line);padding:10px 13px;border-radius:5px}
+nav a:hover{color:var(--cyan);border-color:var(--cyan)}
+main{max-width:1400px;margin:auto;padding:30px 24px}
+.kicker{color:var(--cyan);font-size:10px;letter-spacing:3px}
+h1{font-size:30px;letter-spacing:2px;margin:10px 0}
+.intro{color:var(--muted);font-size:13px;margin:0 0 25px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:22px}
+.metric,.panel{background:linear-gradient(145deg,#0d1b30,#08111f);border:1px solid var(--line);border-radius:8px}
+.metric{padding:18px}
+.metric label{display:block;color:var(--muted);font-size:10px;letter-spacing:1.5px;margin-bottom:12px}
+.metric strong{font-size:23px;color:var(--cyan);font-weight:600;overflow-wrap:anywhere}
+.layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.8fr);gap:18px}
+.panel{padding:21px;margin-bottom:18px;min-width:0}
+.panel h2{font-size:13px;letter-spacing:2px;margin:0 0 18px}
+label.field-label{display:block;font-size:10px;color:var(--muted);letter-spacing:1px;margin:0 0 8px}
+input,select{width:100%;background:#050c17;border:1px solid #214365;border-radius:5px;padding:12px;color:var(--text);outline:none;font-size:13px}
+input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 2px #40dfff13}
+button,.button{background:#0b3154;border:1px solid #167dc2;border-radius:5px;color:var(--cyan);padding:11px 15px;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;display:inline-block}
+button:hover,.button:hover{background:#104575;border-color:var(--cyan)}
+button:disabled{opacity:.5;cursor:wait}
+.formrow{display:flex;gap:10px;align-items:end}
+.formrow>div{flex:1;min-width:0}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.quick button{font-size:10px;padding:8px 10px}
+.notice{font-size:12px;color:var(--muted);line-height:1.7}
+.result-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.result-head h2{margin:0}
+#message{font-size:12px;color:var(--muted);margin:10px 0;white-space:pre-wrap}
+#results{display:grid;gap:10px}
+.result{border:1px solid #183653;background:#07111e;border-radius:6px;padding:14px}
+.result-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ip{color:var(--cyan);font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.pill{border:1px solid #285477;border-radius:4px;color:#a6dfff;font-size:10px;padding:4px 7px}
+.meta{font-size:12px;color:var(--muted);line-height:1.8;margin-top:8px;overflow-wrap:anywhere}
+.result button{margin-top:12px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#050c17;border:1px solid var(--line);border-radius:5px;padding:13px;color:#b8d9ee;font-size:11px;max-height:400px;overflow:auto}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){header{padding:0 14px}.brand{font-size:14px}nav a{padding:8px;font-size:9px}main{padding:24px 14px}.metrics{gap:8px}.metric{padding:13px}.metric strong{font-size:18px}.formrow{align-items:stretch;flex-direction:column}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">J.A.R.V.I.S.<small>SHODAN INTELLIGENCE CONSOLE</small></div>
+  <nav><a href="/">← DASHBOARD</a><a href="http://127.0.0.1:5001" target="_blank" rel="noopener">SPIDERFOOT ↗</a></nav>
+</header>
+<main>
+  <div class="kicker">STARK INDUSTRIES // NETWORK INTELLIGENCE</div>
+  <h1>SHODAN CONSOLE</h1>
+  <p class="intro">Search indexed internet-facing systems and inspect individual host records.</p>
+
+  <section class="metrics">
+    <div class="metric"><label>API STATUS</label><strong id="api-status">CHECKING</strong></div>
+    <div class="metric"><label>PLAN</label><strong id="plan">—</strong></div>
+    <div class="metric"><label>QUERY CREDITS</label><strong id="query-credits">—</strong></div>
+    <div class="metric"><label>SCAN CREDITS</label><strong id="scan-credits">—</strong></div>
+  </section>
+
+  <div class="layout">
+    <div>
+      <section class="panel">
+        <h2>⌕ &nbsp; DEVICE SEARCH</h2>
+        <form id="search-form">
+          <label class="field-label" for="query">SHODAN QUERY</label>
+          <div class="formrow">
+            <div><input id="query" name="query" placeholder='e.g. product:"nginx"' required autocomplete="off"></div>
+            <div style="flex:0 0 auto"><button id="search-button" type="submit">RUN SEARCH</button></div>
+          </div>
+          <div class="formrow" style="margin-top:13px">
+            <div><label class="field-label" for="limit">RESULT LIMIT</label><select id="limit"><option>10</option><option>20</option><option>30</option><option>50</option></select></div>
+          </div>
+        </form>
+        <div class="quick">
+          <button type="button" data-query="port:443">HTTPS HOSTS</button>
+          <button type="button" data-query="port:22">SSH HOSTS</button>
+          <button type="button" data-query="product:nginx">NGINX</button>
+          <button type="button" data-query="product:Apache">APACHE</button>
+        </div>
+        <div id="message" role="status">Ready. Enter a query to begin.</div>
+      </section>
+
+      <section class="panel">
+        <div class="result-head"><h2>SEARCH RESULTS</h2><span class="pill" id="result-count">0 RESULTS</span></div>
+        <div id="results"><p class="notice">Search results will appear here.</p></div>
+      </section>
+    </div>
+
+    <aside>
+      <section class="panel">
+        <h2>◎ &nbsp; HOST INSPECTOR</h2>
+        <form id="host-form">
+          <label class="field-label" for="host-ip">IP ADDRESS</label>
+          <div class="formrow">
+            <div><input id="host-ip" placeholder="e.g. 8.8.8.8" required autocomplete="off"></div>
+            <div style="flex:0 0 auto"><button id="host-button" type="submit">INSPECT</button></div>
+          </div>
+        </form>
+        <div id="host-message" class="notice" style="margin-top:12px">Select a search result or enter an IP address.</div>
+        <div id="host-details"></div>
+      </section>
+      <section class="panel">
+        <h2> SYSTEM INFORMATION</h2>
+        <p class="notice">The dashboard uses your existing local Flask API. Account details and search results are loaded live; unavailable API data is not fabricated.</p>
+        <hr>
+        <p class="notice">Shodan data may include exposed services and banners. Only use the information for lawful research and authorized security work.</p>
+      </section>
+    </aside>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function api(url, options={}) {
+  const response = await fetch(url, {
+    headers: {"Content-Type":"application/json"},
+    ...options
+  });
+  let data;
+  try { data = await response.json(); }
+  catch { throw new Error("The server returned an unreadable response."); }
+  if (!response.ok) throw new Error(data.error || data.message || `Request failed (${response.status})`);
+  return data;
+}
+function setMessage(text, error=false) {
+  $("message").textContent = text;
+  $("message").style.color = error ? "var(--red)" : "var(--muted)";
+}
+async function loadStatus() {
+  try {
+    const d = await api("/api/status");
+    $("api-status").textContent = "ONLINE";
+    $("api-status").style.color = "var(--green)";
+    $("plan").textContent = d.plan ?? "—";
+    $("query-credits").textContent = d.query_credits ?? "—";
+    $("scan-credits").textContent = d.scan_credits ?? "—";
+  } catch(e) {
+    $("api-status").textContent = "CHECK";
+    $("api-status").style.color = "var(--red)";
+    $("plan").textContent = "—";
+    $("query-credits").textContent = "—";
+    $("scan-credits").textContent = "—";
+    setMessage("Shodan status unavailable: " + e.message, true);
+  }
+}
+function renderResults(matches) {
+  const results = $("results");
+  $("result-count").textContent = `${matches.length} RESULT${matches.length===1?"":"S"}`;
+  if (!matches.length) {
+    results.innerHTML = '<p class="notice">No matches returned for this query.</p>';
+    return;
+  }
+  results.innerHTML = matches.map(m => `
+    <article class="result">
+      <div class="result-top">
+        <span class="ip">${esc(m.ip || "Unknown IP")}</span>
+        <span class="pill">${esc(m.port ?? "?")}/${esc(m.transport || "tcp")}</span>
+      </div>
+      <div class="meta">
+        ${esc(m.org || "Organization unknown")}<br>
+        ${esc([m.city,m.country].filter(Boolean).join(", ") || "Location unknown")}<br>
+        ${esc(m.product || "Product not identified")}<br>
+        ${esc((m.hostnames || []).join(", "))}
+      </div>
+      <button type="button" data-inspect="${esc(m.ip || "")}">INSPECT HOST →</button>
+    </article>`).join("");
+  results.querySelectorAll("[data-inspect]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $("host-ip").value = btn.dataset.inspect;
+      $("host-form").requestSubmit();
+    });
+  });
+}
+$("search-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const query = $("query").value.trim();
+  if (!query) return;
+  $("search-button").disabled = true;
+  setMessage("Searching Shodan…");
+  $("results").innerHTML = '<p class="notice">Retrieving results…</p>';
+  try {
+    const d = await api("/api/search", {
+      method:"POST",
+      body:JSON.stringify({query,limit:Number($("limit").value)})
+    });
+    const matches = Array.isArray(d.matches) ? d.matches : (Array.isArray(d) ? d : []);
+    renderResults(matches);
+    setMessage(`Search completed. ${matches.length} result(s) returned.`);
+  } catch(e) {
+    $("results").innerHTML = '<p class="notice">The search could not be completed.</p>';
+    $("result-count").textContent = "ERROR";
+    setMessage("Search failed: " + e.message, true);
+  } finally {
+    $("search-button").disabled = false;
+  }
+});
+document.querySelectorAll("[data-query]").forEach(btn => btn.addEventListener("click", () => {
+  $("query").value = btn.dataset.query;
+  $("search-form").requestSubmit();
+}));
+$("host-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const ip = $("host-ip").value.trim();
+  if (!ip) return;
+  $("host-button").disabled = true;
+  $("host-message").textContent = "Inspecting host…";
+  $("host-details").innerHTML = "";
+  try {
+    const d = await api("/api/host", {method:"POST",body:JSON.stringify({ip})});
+    $("host-message").textContent = "Host record retrieved.";
+    const services = Array.isArray(d.services) ? d.services : [];
+    $("host-details").innerHTML = `
+      <div class="meta">
+      <b style="color:var(--cyan)">${esc(d.ip || ip)}</b><br>
+      Organization: ${esc(d.organization || "Unknown")}<br>
+      Country: ${esc(d.country || "Unknown")}<br>
+      OS: ${esc(d.os || "Unknown")}<br>
+      Hostnames: ${esc((d.hostnames || []).join(", ") || "None listed")}<br>
+      Ports: ${esc((d.ports || []).join(", ") || "None listed")}<br>
+      Tags: ${esc((d.tags || []).join(", ") || "None")}<br>
+      Vulnerabilities: ${esc((d.vulns || []).join(", ") || "None listed")}
+      </div>
+      <hr><h2>SERVICE BANNERS</h2>
+      <pre>${esc(services.map(s => JSON.stringify(s,null,2)).join("\n\n") || "No service banners returned.")}</pre>`;
+  } catch(e) {
+    $("host-message").textContent = "Host lookup failed: " + e.message;
+    $("host-message").style.color = "var(--red)";
+  } finally {
+    $("host-button").disabled = false;
+  }
+});
+loadStatus();
+</script>
+</body>
+</html>
